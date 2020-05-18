@@ -1,0 +1,23 @@
+language: generic
+sudo: required
+
+services:
+    - docker
+
+before-install:
+    - docker build -t madhan46/react-test -f ./client/Dockerfile.dev ./client
+    
+script:
+    - docker run -e CI=true madhan46/react-test npm run test -- --coverage
+
+after_success:
+    - docker build -t madhan46/multi-client ./client
+    - docker build -t madhan46/multi-nginx ./nginx
+    - docker build -t madhan46/multi-server ./server
+    - docker build -t madhan46/multi-worker ./worker
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    - docker push madhan46/multi-client
+    - docker push madhan46/multi-nginx
+    - docker push madhan46/multi-server
+    - docker push madhan46/multi-worker
+    
